@@ -38,15 +38,26 @@ class OrganizedRepeatsExternalModule extends AbstractExternalModule {
     #region Hooks
 
     function redcap_data_entry_form ($project_id, $record = NULL, $instrument, $event_id, $group_id = NULL, $repeat_instance = 1) {
-
-        $this->organizeRepeatInstruments();
+        // Data entry form of an existing record
+        if ($record !== null) {
+            $Proj = new \Project($project_id);
+            $arm_num = $Proj->eventInfo[$event_id]["arm_num"];
+            $this->organizeRepeatInstruments($project_id, $record, $arm_num, $instrument, $event_id, $repeat_instance);
+        }
     }
 
     function redcap_every_page_top($project_id = null) {
-
         // Record Home Page (of an existing record)
         if (PageInfo::IsExistingRecordHomePage()) {
-            $this->organizeRepeatInstruments();
+            $Proj = new \Project($project_id);
+            $arm_num = isset($Proj->events[$_GET["arm"]]) ? $_GET["arm"] : "1";
+            $record = \Records::recordExists($project_id, $_GET["id"], $arm_num) ? $_GET["id"] : null;
+            if ($record !== null) {
+                $this->organizeRepeatInstruments($project_id, $record, $arm_num);
+            }
+        }
+        else if (PageInfo::isProjectSetup()) {
+            $this->add_setup($project_id);
         }
     }
 
@@ -56,6 +67,10 @@ class OrganizedRepeatsExternalModule extends AbstractExternalModule {
     function redcap_module_ajax($action, $payload, $project_id, $record, $instrument, $event_id, $repeat_instance, $survey_hash, $response_id, $survey_queue_hash, $page, $page_full, $user_id, $group_id) {
         $user = new User($this->fw, $user_id);
         switch($action) {
+            case "load-config":
+                return $this->load_config($project_id, $user);
+            case "save-config":
+                return $this->save_config($project_id, $user, $payload);
         }
         return null;
     }
@@ -64,12 +79,45 @@ class OrganizedRepeatsExternalModule extends AbstractExternalModule {
 
     #region Implementation
 
-    private function organizeRepeatInstruments() {
+    private function organizeRepeatInstruments($project_id, $record, $arm_num, $instrument = null, $event_id = null, $instance = null) {
+        $on_rhp = $instrument === null;
         $user = new User($this->fw, defined("USERID") ? USERID : null);
-        $config = [];
+        $config = [
+            "mode" => "render",
+            "onRHP" => $on_rhp,
+        ];
 
         $this->inject_js();
         $this->initialize_js($config);
+    }
+
+    #endregion
+
+    #region Setup
+
+    private function add_setup($project_id) {
+        $config = [
+            "mode" => "setup",
+            "closeBtnText" => js_escape($GLOBALS["lang"]["pub_085"]),
+        ];
+        $this->inject_js();
+        $this->initialize_js($config);
+    }
+
+    private function load_config($project_id, $user) {
+        $this->require_design_rights($project_id, $user);
+        return "TODO";
+    }
+    
+    private function save_config($project_id, $user, $data) {
+        $this->require_design_rights($project_id, $user);
+        return null;
+    }
+
+    private function require_design_rights($project_id, $user) {
+        if (!$user->hasDesignRights($project_id)) {
+            throw new Exception("Insufficient rights. You must have project design rights to configure Organized Repeats.");
+        }
     }
 
     #endregion

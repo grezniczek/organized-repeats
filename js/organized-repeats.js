@@ -42,10 +42,80 @@ function initialize(config_data, jsmo_obj = null) {
         }
         initialized = true;
         log('Initialized', config);
+
+        switch(config.mode) {
+            case 'setup':
+                setupConfig();
+                break;
+        }
     }
 }
 
 //#endregion
+
+//#region Setup
+
+function setupConfig() {
+    const orig_initDialog = window['initDialog'];
+    const $editDiv = $('<div class="orem-edit-buttons"></div>');
+    const $editBtn = $('<button data-orem-action="edit" type="button" disabled class="btn btn-default"><i class="fa-solid fa-wrench text-primary"></i> Organized Repeats</button>');
+    const $helpBtn = $('<a href="javascript:;" data-orem-action="help"><i class="fa-solid fa-circle-question fa-lg"></i></a>');
+    $editBtn.on('click', editConfig);
+    $helpBtn.on('click', editConfigHelp)
+    $editDiv.append($editBtn, $helpBtn);
+    window['initDialog'] = function(div_id, inner_html) {
+        orig_initDialog(div_id, inner_html);
+        if (div_id == 'repeatingInstanceEnableDialog') {
+            $('#repeatingInstanceEnableDialog').on('dialogopen', function( event, ui ) {
+                const $ried = $('#repeatingInstanceEnableDialog').parent();
+                log('Repeating Instances Config opened:');
+                log($ried);
+                if ($ried.find('[data-orem-action]').length == 0) {
+                    $ried.find('.ui-dialog-buttonpane').prepend($editDiv);
+                    loadConfig($editBtn);
+                }
+                $ried.find('.ui-dialog-buttonset button.ui-button').each(function() {
+                    const $this = $(this);
+                    if ($this.text() == config.closeBtnText) {
+                        $this.on('click', saveConfig);
+                    }
+                });
+                log('UI installed')
+            });
+        }
+    }
+}
+
+function editConfig() {
+    log('Editing config');
+}
+
+function editConfigHelp() {
+    log('Showing config help');
+}
+
+function loadConfig($btn) {
+    config.data = null;
+    JSMO.ajax('load-config').then(function(data) {
+        config.data = data
+        log('Config loaded:', config.data);
+        $btn.prop('disabled', false);
+    }).catch(function(err) {
+        error('Failed to load config:', err);
+    });
+}
+
+function saveConfig() {
+    if (config.data == null) return; // Nothing to save
+    JSMO.ajax('save-config', config.data).then(function(response) {
+        log('Config saved');
+    }).catch(function(err) {
+        error('Failed to save config:', err);
+    });
+}
+
+//#endregion
+
 
 //#region Clipboard Helper
 

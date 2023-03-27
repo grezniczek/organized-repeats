@@ -10,6 +10,10 @@ class PageInfo {
         return self::getPage() === "DataEntry/record_home.php";
     }
 
+    public static function isProjectSetup() {
+        return self::getPage() == "ProjectSetup/index.php";
+    }
+
     public static function IsExistingRecordHomePage() {
         return self::IsRecordHomePage() && !isset($_GET["auto"]);
     }

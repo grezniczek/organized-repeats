@@ -1,1 +1,10 @@
 /* Organized Repeats EM */
+.orem-edit-buttons {
+    float: left;
+    margin-left: 10px;
+    display: flex;
+    align-items: center;
+}
+a[data-orem-action="help"] {
+    color: var(--bs-gray);
+}
