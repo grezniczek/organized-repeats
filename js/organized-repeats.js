@@ -53,7 +53,8 @@ function initialize(config_data, jsmo_obj = null) {
 
 //#endregion
 
-//#region Setup
+
+//#region Setup (via "Repeating instruments and events" on the Project Setup Page)
 
 function setupConfig() {
     const orig_initDialog = window['initDialog'];
