@@ -37,7 +37,7 @@ class OrganizedRepeatsExternalModule extends AbstractExternalModule {
 
     #region Hooks
 
-    function redcap_data_entry_form ($project_id, $record = NULL, $instrument, $event_id, $group_id = NULL, $repeat_instance = 1) {
+    function redcap_data_entry_form ($project_id, $record, $instrument, $event_id, $group_id, $repeat_instance) {
         // Data entry form of an existing record
         if ($record !== null) {
             $Proj = new \Project($project_id);
@@ -46,7 +46,7 @@ class OrganizedRepeatsExternalModule extends AbstractExternalModule {
         }
     }
 
-    function redcap_every_page_top($project_id = null) {
+    function redcap_every_page_top($project_id) {
         // Record Home Page (of an existing record)
         if (PageInfo::IsExistingRecordHomePage()) {
             $Proj = new \Project($project_id);
